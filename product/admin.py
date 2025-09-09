@@ -2,18 +2,14 @@ from django.contrib import admin
 from .models import Category, Product, Review
 # Register your models here.
 
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
+class ReviewInline(admin.StackedInline):
+    model = Review
+    extra = 1
     
-@admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'price', 'category')
-    list_filter = ('category',)
-    search_fields = ('title', 'description')
-    
-@admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('id', 'text', 'product')
-    search_fields = ('text',)
+    inlines = [ReviewInline]
+
+
+admin.site.register(Category)
+admin.site.register(Product, ProductAdmin)
+admin.site.register(Review)
