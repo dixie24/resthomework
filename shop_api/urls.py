@@ -29,7 +29,7 @@ urlpatterns = [
     path('api/v1/categories/crud/', views.category_cud_api_view),
     path('api/v1/categories/crud/<int:id>/', views.category_cud_api_view),
     path('api/v1/products/crud/', views.product_cud_api_view),
-    path('api/v1/products/crud/<int:id>/', views.product_cud_api_view),
+    path('api/v1/products/crud/<int:id>/', views.product_cud_api_view),  
     path('api/v1/reviews/crud/', views.review_cud_api_view),
     path('api/v1/reviews/crud/<int:id>/', views.review_cud_api_view),
 ]
