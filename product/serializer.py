@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg, Count
-from .models import Product, Category, Review
+from .models import Product, Category, Review, STARS
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
