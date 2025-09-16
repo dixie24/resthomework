@@ -23,7 +23,13 @@ from product import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/products/', views.product_list_api_view, name='product-list'),
-    path('api/v1/products/<int:id>/', views.product_list_api_view),
-    path('api/v1/products/reviews/', views.product_reviews_api_view),
-    path('api/v1/categories/', views.categories_with_count_api_view)
+    path('api/v1/products/<int:id>/', views.product_detail_api_view, name='product-detail'),
+    path('api/v1/products/reviews/', views.product_reviews_api_view, name='product-reviews'),
+    path('api/v1/categories/', views.categories_with_count_api_view, name='category-list'),
+    path('api/v1/categories/crud/', views.category_cud_api_view, name='category-crud-list'),
+    path('api/v1/categories/crud/<int:id>/', views.category_cud_api_view, name='category-crud-detail'),
+    path('api/v1/products/crud/', views.product_cud_api_view, name='product-crud-list'),
+    path('api/v1/products/crud/<int:id>/', views.product_cud_api_view, name='product-cud-detail'),
+    path('api/v1/reviews/crud/', views.review_cud_api_view, name='review-crud-list'),
+    path('api/v1/reviews/crud/<int:id>/', views.review_cud_api_view, name='review-cud-detail'),
 ]

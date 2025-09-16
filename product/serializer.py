@@ -46,3 +46,19 @@ class CategoryWithProductCountSerializer(serializers.ModelSerializer):
 
     def get_products_count(self, category):
         return category.products.count()
+    
+    
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name')
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'title', 'description', 'price', 'category')
+        
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'stars', 'product')
