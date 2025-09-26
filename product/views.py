@@ -9,7 +9,91 @@ from .serializer import (
     ProductValidateSerializer, ReviewValidateSerializer
 )
 
-# Views for LIST and DETAIL operations (read-only)
+
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from .models import Product, Category, Review
+from .serializer import (
+    ProductListSerializer, ProductDetailSerializer, ProductWithReviewsSerializer, 
+    CategoryWithProductCountSerializer, CategoryValidateSerializer, 
+    ProductValidateSerializer, ReviewValidateSerializer
+)
+
+
+class ProductListCreateAPIView(ListCreateAPIView):
+    queryset = Product.objects.all()
+    pagination_class = PageNumberPagination
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProductValidateSerializer
+        return ProductListSerializer
+        
+    def perform_create(self, serializer):
+        category_id = serializer.validated_data.pop('category')
+        serializer.save(category_id=category_id)
+
+
+class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    lookup_field = 'id'
+    
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return ProductValidateSerializer
+        return ProductDetailSerializer
+        
+    def perform_update(self, serializer):
+        category_id = serializer.validated_data.pop('category', None)
+        if category_id is not None:
+            serializer.save(category_id=category_id)
+        else:
+            serializer.save()
+
+
+class ProductReviewsAPIView(ListAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductWithReviewsSerializer
+
+
+class CategoryListCreateAPIView(ListCreateAPIView):
+    queryset = Category.objects.all()
+    pagination_class = PageNumberPagination
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CategoryValidateSerializer
+        return CategoryWithProductCountSerializer
+
+
+class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategoryValidateSerializer
+    lookup_field = 'id'
+
+
+class ReviewListCreateAPIView(ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewValidateSerializer
+        
+    def perform_create(self, serializer):
+        product_id = serializer.validated_data.pop('product')
+        serializer.save(product_id=product_id)
+
+
+class ReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewValidateSerializer
+    lookup_field = 'id'
+    
+    def perform_update(self, serializer):
+        product_id = serializer.validated_data.pop('product', None)
+        if product_id is not None:
+            serializer.save(product_id=product_id)
+        else:
+            serializer.save()
 
 @api_view(['GET'])
 def product_list_api_view(request):
@@ -39,7 +123,6 @@ def categories_with_count_api_view(request):
     data = CategoryWithProductCountSerializer(categories, many=True).data
     return Response(data=data, status=status.HTTP_200_OK)
 
-# Views for CUD (Create, Update, Delete) operations
 
 @api_view(['POST', 'PUT', 'DELETE'])
 def category_cud_api_view(request, id=None):

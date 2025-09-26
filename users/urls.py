@@ -1,8 +1,8 @@
 from django.urls import path
-from . import views
+from .views import UserAuthViewSet
 
 urlpatterns = [
-    path('registration/', views.registration_api_view),
-    path('authorization/', views.authorization_api_view),
-    path('confirm/', views.confirmation_api_view),
+    path('registration/', UserAuthViewSet.as_view({'post': 'register'})),
+    path('authorization/', UserAuthViewSet.as_view({'post': 'authorize'})),
+    path('confirm/', UserAuthViewSet.as_view({'post': 'confirm'})),
 ]
