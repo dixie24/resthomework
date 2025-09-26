@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     'product',
     'users',
     'rest_framework.authtoken',
+    
 ]
 
 REST_FRAMEWORK = {
+    'PAGE_SIZE': 3,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ]
