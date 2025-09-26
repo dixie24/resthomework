@@ -10,9 +10,8 @@ class ConfirmationCode(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.сode = ''.join(random.choices(string.digits, k=6))
+            self.code = ''.join(random.choices(string.digits, k=6))
         super().save(*args, **kwargs)
-
 
     class Meta:
         verbose_name = "Код подтверждения"

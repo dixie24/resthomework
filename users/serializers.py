@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from rest_framework.exceptions import ValidationError
 from .models import ConfirmationCode 
-import random
-import string
+from rest_framework.exceptions import ValidationError
+
 
 class AuthValidateSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -17,11 +16,13 @@ class AuthValidateSerializer(serializers.Serializer):
             user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             raise serializers.ValidationError("Неверные учетные данные.")
+        
         if user.check_password(password):
             if not user.is_active:
                 raise serializers.ValidationError("Пользователь не активирован. Подтвердите свой email.")
             self.context['user'] = user
             return data
+        
         raise serializers.ValidationError("Неверные учетные данные.")
     
     
@@ -29,6 +30,7 @@ class RegisterValidateSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=6) 
+    
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Пользователь с таким email уже существует.")
@@ -45,11 +47,11 @@ class RegisterValidateSerializer(serializers.Serializer):
             password=validated_data['password'],
             email=validated_data['email'],
             is_active=False
-            )
+        )
         ConfirmationCode.objects.create(user=user)
         return user 
 
-class ConfirmValidateSerializer(serializers.Serializer):
 
+class ConfirmValidateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField(max_length=6)
