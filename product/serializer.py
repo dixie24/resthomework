@@ -75,8 +75,6 @@ class ProductValidateSerializer(serializers.Serializer):
 class ReviewValidateSerializer(serializers.Serializer):
     text = serializers.CharField(required=True, min_length=1)
     stars = serializers.IntegerField(required=True, min_value=1, max_value=5)
-    product = serializers.IntegerField(required=True) # Имя поля 'product'
-
     def validate_product(self, product_id):
         try:
             Product.objects.get(id=product_id)

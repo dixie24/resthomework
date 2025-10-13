@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get('DEBUG') == 'on' else False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -42,11 +42,13 @@ INSTALLED_APPS = [
     'product',
     'users',
     'rest_framework.authtoken',
+    'drf_yasg',
     
 ]
 
 REST_FRAMEWORK = {
     'PAGE_SIZE': 3,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination', # <-- ДОБАВЛЕНО
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ]
@@ -89,13 +91,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
+        'USER': os.environ.get('DB_USER'),   
         'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT')
-    }
+        'HOST': os.environ.get('DB_HOST'),   
+        'PORT': os.environ.get('DB_PORT'),       
+    
+        }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -137,3 +139,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# В самом конце файла settings.py добавьте:
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

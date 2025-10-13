@@ -1,0 +1,203 @@
+[
+{
+    "model": "product.category",
+    "pk": 1,
+    "fields": {
+        "name": "toys"
+    }
+},
+{
+    "model": "product.category",
+    "pk": 2,
+    "fields": {
+        "name": "drinks"
+    }
+},
+{
+    "model": "product.category",
+    "pk": 3,
+    "fields": {
+        "name": "fastfood"
+    }
+},
+{
+    "model": "product.product",
+    "pk": 1,
+    "fields": {
+        "title": "coca-cola",
+        "description": "Coca-Cola is the iconic sparkling soft drink, created in 1886 in Atlanta, Georgia, by Dr. John S. Pemberton. Coke was first offered as a fountain beverage at Jacob's Pharmacy by mixing Coca-Cola syrup with carbonated water, the fabled secret formula for Coca-Cola. Over the years, this truly legendary carbonated soft drink gained a massive cult following. Coca-Cola is famous not only for its great taste but for the feeling it delivers. Every sip of this legendary bubbly cola is a reminder of happy times. Now, its popularity has made it truly universal. Today, you can find Coca-Cola - the carbonated fizzy cola drink full of invigorating and refreshing flavours - in virtually every part of the world.",
+        "price": "90.00",
+        "category": 2
+    }
+},
+{
+    "model": "product.product",
+    "pk": 2,
+    "fields": {
+        "title": "Kav-kev sandwich",
+        "description": "The Kav&kev sandwich is a 215 gram ketchup sandwich that can be purchased at the globus-online.kg online store for 80 soms. \r\nThis product is an example of a ready-made sandwich that is available for purchase in stores and online food delivery services.",
+        "price": "80.00",
+        "category": 3
+    }
+},
+{
+    "model": "product.product",
+    "pk": 3,
+    "fields": {
+        "title": "Hot-Wheels toy car",
+        "description": "Hot Wheels is an American media franchise and brand of scale model cars invented by Elliot Handler and introduced by his company Mattel on May 18, 1968.[1] It was the primary competitor of Matchbox until Mattel bought Matchbox owner Tyco Toys in 1997.\r\n\r\nMany automobile manufacturers have since licensed Hot Wheels to make scale models of their cars, allowing the use of original design blueprints and detailing. Although Hot Wheels were originally intended to be children's toys, they have become popular with adult collectors, for whom limited edition models are now made available.",
+        "price": "160.00",
+        "category": 1
+    }
+},
+{
+    "model": "product.product",
+    "pk": 4,
+    "fields": {
+        "title": "ToyBoss Hot-dog",
+        "description": "Toyboss hot dog 300 g is a ready-to-eat fast food product from a Kyrgyz meat products manufacturer.",
+        "price": "110.00",
+        "category": 3
+    }
+},
+{
+    "model": "product.product",
+    "pk": 5,
+    "fields": {
+        "title": "Piala-Tea",
+        "description": "Cold, sweet drink what nade was in Kazahstan",
+        "price": "80.00",
+        "category": 2
+    }
+},
+{
+    "model": "product.product",
+    "pk": 6,
+    "fields": {
+        "title": "Amogus",
+        "description": "A crewmate or impostor character from the video game Among Us.",
+        "price": "22000.00",
+        "category": 1
+    }
+},
+{
+    "model": "product.review",
+    "pk": 1,
+    "fields": {
+        "text": "nice",
+        "product": 1,
+        "stars": 4
+    }
+},
+{
+    "model": "product.review",
+    "pk": 2,
+    "fields": {
+        "text": "bad",
+        "product": 2,
+        "stars": 5
+    }
+},
+{
+    "model": "product.review",
+    "pk": 3,
+    "fields": {
+        "text": "not bad",
+        "product": 3,
+        "stars": 2
+    }
+},
+{
+    "model": "product.review",
+    "pk": 4,
+    "fields": {
+        "text": "great",
+        "product": 4,
+        "stars": 5
+    }
+},
+{
+    "model": "product.review",
+    "pk": 5,
+    "fields": {
+        "text": "its piece of dogshit",
+        "product": 5,
+        "stars": 4
+    }
+},
+{
+    "model": "product.review",
+    "pk": 6,
+    "fields": {
+        "text": "ну сойдет",
+        "product": 6,
+        "stars": 4
+    }
+},
+    {
+        "model": "admin.logentry",
+        "pk": 10,
+        "fields": {
+            "action_time": "2025-09-09T11:32:55.951Z",
+            "user": 1,
+            "content_type": 9,
+            "object_id": "1",
+            "object_repr": "nice",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 11,
+        "fields": {
+            "action_time": "2025-09-09T11:33:01.058Z",
+            "user": 1,
+            "content_type": 9,
+            "object_id": "2",
+            "object_repr": "bad",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 12,
+        "fields": {
+            "action_time": "2025-09-09T11:33:07.165Z",
+            "user": 1,
+            "content_type": 9,
+            "object_id": "3",
+            "object_repr": "not bad",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 13,
+        "fields": {
+            "action_time": "2025-09-09T11:33:16.286Z",
+            "user": 1,
+            "content_type": 9,
+            "object_id": "4",
+            "object_repr": "great",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    },
+    {
+        "model": "admin.logentry",
+        "pk": 14,
+        "fields": {
+            "action_time": "2025-09-09T11:33:44.887Z", 
+            "user": 1,
+            "content_type": 9,
+            "object_id": "5",
+            "object_repr": "its piece of dogshit",
+            "action_flag": 1,
+            "change_message": "[{\"added\": {}}]"
+        }
+    }
+
+]
