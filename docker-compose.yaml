@@ -1,6 +1,6 @@
 version: '3'
 services:
-  cinematica_back:
+  shop_api_back:
     build:
       context: .
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
@@ -8,7 +8,7 @@ services:
       - "8001:8000" # host:container
     depends_on:
       - shop_db
-  cinema_db:
+  shop_db:
     image: 'postgres:14'
     environment:
       POSTGRES_DB: data_shop

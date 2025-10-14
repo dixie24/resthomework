@@ -9,9 +9,11 @@ click==8.2.1
 colorama==0.4.6
 defusedxml==0.7.1
 Django==5.2.6
+django-dotenv==1.4.2
 djangorestframework==3.16.1
 dnspython==2.7.0
 dotenv==0.9.9
+drf-yasg==1.21.11
 elementpath==5.0.3
 email_validator==2.2.0
 fastapi==0.116.1
@@ -26,6 +28,7 @@ httpie==3.2.4
 httptools==0.6.4
 httpx==0.28.1
 idna==3.10
+inflection==0.5.1
 iso8601==2.1.0
 Jinja2==3.1.6
 markdown-it-py==3.0.0
@@ -33,6 +36,8 @@ MarkupSafe==3.0.2
 mdurl==0.1.2
 multidict==6.6.4
 oauthlib==3.3.1
+packaging==25.0
+psycopg2==2.9.10
 pydantic==2.11.7
 pydantic_core==2.33.2
 Pygments==2.19.2
@@ -62,6 +67,7 @@ typer==0.16.0
 typing-inspection==0.4.1
 typing_extensions==4.14.1
 tzdata==2025.2
+uritemplate==4.2.0
 urllib3==2.5.0
 uvicorn==0.35.0
 watchfiles==1.1.0
