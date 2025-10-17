@@ -3,7 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.db.models.base import ObjectDoesNotExist 
 
 from .models import ConfirmationCode 
 from .serializers import (
@@ -13,9 +14,13 @@ from .serializers import (
 )
 
 
+User = get_user_model()
+
+
 class UserAuthViewSet(GenericViewSet):
+
     queryset = User.objects.all() 
- 
+    
     @action(detail=False, methods=['post'], serializer_class=RegisterValidateSerializer, url_path='register')
     def register(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -42,8 +47,10 @@ class UserAuthViewSet(GenericViewSet):
         code = data['code']
         
         try:
-            user = self.get_queryset().get(email__iexact=email)
-        except User.DoesNotExist:
+
+            user = self.get_queryset().get(email__iexact=email) 
+
+        except ObjectDoesNotExist: 
             return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'User not found!'})
         
         if user.is_active:
