@@ -1,57 +1,56 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import ConfirmationCode 
 from rest_framework.exceptions import ValidationError
+from .models import ConfirmationCode
+from users.models import CustomUser
 
-
-class AuthValidateSerializer(serializers.Serializer):
+class UserBaseSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    
-    def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
+    password = serializers.CharField()
+
+
+class AuthValidateSerializer(UserBaseSerializer):
+    pass
+
+
+class RegisterValidateSerializer(UserBaseSerializer):
+    def validate_email(self, email):
+        try:
+            CustomUser.objects.get(email=email)
+        except:
+            return email
+        raise ValidationError('Email уже существует!')
+
+
+class ConfirmationSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    code = serializers.CharField(max_length=6)
+
+    def validate(self, attrs):
+        user_id = attrs.get('user_id')
+        code = attrs.get('code')
 
         try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Неверные учетные данные.")
-        
-        if user.check_password(password):
-            if not user.is_active:
-                raise serializers.ValidationError("Пользователь не активирован. Подтвердите свой email.")
-            self.context['user'] = user
-            return data
-        
-        raise serializers.ValidationError("Неверные учетные данные.")
-    
-    
-class RegisterValidateSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=6) 
-    
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Пользователь с таким email уже существует.")
-        return value
-    
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Пользователь с таким именем уже существует.")
-        return value
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            raise ValidationError('User не существует!')
 
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            password=validated_data['password'],
-            email=validated_data['email'],
-            is_active=False
-        )
-        ConfirmationCode.objects.create(user=user)
-        return user 
+        try:
+            confirmation_code = ConfirmationCode.objects.get(user=user)
+        except ConfirmationCode.DoesNotExist:
+            raise ValidationError('Код подтверждения не найден!')
+
+        if confirmation_code.code != code:
+            raise ValidationError('Неверный код подтверждения!')
+
+        return attrs
+
+# # class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+# #     @classmethod
+# #     def get_token(cls, user):
+# #         token = super().get_token(user)
+# #         token["email"] = user.email
+# #         return token
 
 
-class ConfirmValidateSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    code = serializers.CharField(max_length=6)
+# class OauthCodeSerializer(serializers.Serializer):
+#     code = serializers.CharField()

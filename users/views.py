@@ -10,7 +10,7 @@ from .models import ConfirmationCode
 from .serializers import (
     RegisterValidateSerializer, 
     AuthValidateSerializer, 
-    ConfirmValidateSerializer
+    ConfirmationSerializer
 )
 
 
@@ -37,7 +37,7 @@ class UserAuthViewSet(GenericViewSet):
         )
 
 
-    @action(detail=False, methods=['post'], serializer_class=ConfirmValidateSerializer, url_path='confirm')
+    @action(detail=False, methods=['post'], serializer_class=ConfirmationSerializer, url_path='confirm')
     def confirm(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
