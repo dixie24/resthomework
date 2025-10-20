@@ -6,6 +6,7 @@ from users.models import CustomUser
 class UserBaseSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
+    phone_number = serializers.CharField(max_length=15)
 
 
 class AuthValidateSerializer(UserBaseSerializer):
@@ -16,7 +17,7 @@ class RegisterValidateSerializer(UserBaseSerializer):
     def validate_email(self, email):
         try:
             CustomUser.objects.get(email=email)
-        except:
+        except CustomUser.DoesNotExist:
             return email
         raise ValidationError('Email уже существует!')
 

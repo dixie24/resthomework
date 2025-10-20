@@ -198,3 +198,5 @@ db.sqlite3
 .env
 .venv
 .idea
+db.sqlite3
+staticfiles/
