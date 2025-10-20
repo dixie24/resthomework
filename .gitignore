@@ -194,9 +194,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-db.sqlite3
+
 .env
 .venv
 .idea
 db.sqlite3
 staticfiles/
+
+full_data.json
+.full_data.json
+full_dump.json
+.full_dump.json
+requirements.txt
+.requirements.txt
