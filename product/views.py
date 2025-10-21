@@ -1,221 +1,177 @@
-from django.shortcuts import render
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework import status
-from .models import Product, Category, Review
-from .serializer import (
-    ProductListSerializer, ProductDetailSerializer, ProductWithReviewsSerializer, 
-    CategoryWithProductCountSerializer, CategoryValidateSerializer, 
-    ProductValidateSerializer, ReviewValidateSerializer
-)
-
-
+from collections import OrderedDict
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
-from .models import Product, Category, Review
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
+
+from .models import Category, Product, Review
 from .serializer import (
-    ProductListSerializer, ProductDetailSerializer, ProductWithReviewsSerializer, 
-    CategoryWithProductCountSerializer, CategoryValidateSerializer, 
-    ProductValidateSerializer, ReviewValidateSerializer
+    CategorySerializer,
+    ProductSerializer,
+    ReviewSerializer,
+    ProductWithReviewsSerializer,
+    CategoryValidateSerializer,
+    ProductValidateSerializer,
+    ReviewValidateSerializer
 )
+from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes
+from django.core.cache import cache
+
+PAGE_SIZE = 5
 
 
-class ProductListCreateAPIView(ListCreateAPIView):
-    queryset = Product.objects.all()
-    pagination_class = PageNumberPagination
-    
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return ProductValidateSerializer
-        return ProductListSerializer
-        
-    def perform_create(self, serializer):
-        category_id = serializer.validated_data.pop('category')
-        serializer.save(category_id=category_id)
+class CustomPagination(PageNumberPagination):
+    def get_paginated_response(self, data):
+        return Response(OrderedDict([
+            ('total', self.page.paginator.count),
+            ('next', self.get_next_link()),
+            ('previous', self.get_previous_link()),
+            ('results', data)
+        ]))
 
-
-class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
-    lookup_field = 'id'
-    
-    def get_serializer_class(self):
-        if self.request.method in ('PUT', 'PATCH'):
-            return ProductValidateSerializer
-        return ProductDetailSerializer
-        
-    def perform_update(self, serializer):
-        category_id = serializer.validated_data.pop('category', None)
-        if category_id is not None:
-            serializer.save(category_id=category_id)
-        else:
-            serializer.save()
-
-
-class ProductReviewsAPIView(ListAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductWithReviewsSerializer
+    def get_page_size(self, request):
+        return PAGE_SIZE
 
 
 class CategoryListCreateAPIView(ListCreateAPIView):
     queryset = Category.objects.all()
-    pagination_class = PageNumberPagination
+    serializer_class = CategorySerializer
+    pagination_class = CustomPagination
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return CategoryValidateSerializer
-        return CategoryWithProductCountSerializer
+    def post(self, request, *args, **kwargs):
+        serializer = CategoryValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        category = Category.objects.create(**serializer.validated_data)
+        return Response(data=CategorySerializer(category).data,
+                        status=status.HTTP_201_CREATED)
 
 
 class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
-    serializer_class = CategoryValidateSerializer
+    serializer_class = CategorySerializer
     lookup_field = 'id'
 
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = CategoryValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-class ReviewListCreateAPIView(ListCreateAPIView):
-    queryset = Review.objects.all()
-    serializer_class = ReviewValidateSerializer
-        
-    def perform_create(self, serializer):
-        product_id = serializer.validated_data.pop('product')
-        serializer.save(product_id=product_id)
+        instance.name = serializer.validated_data.get('name')
+        instance.save()
+
+        return Response(data=CategorySerializer(instance).data)
 
 
-class ReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Review.objects.all()
-    serializer_class = ReviewValidateSerializer
+class ProductListCreateAPIView(ListCreateAPIView):
+    queryset = Product.objects.select_related('category').all()
+    serializer_class = ProductSerializer
+    pagination_class = CustomPagination
+    permission_classes = [IsOwner | IsAnonymous]
+
+    def post(self, request, *args, **kwargs):
+        email = request.user.email
+        print(f"email: {email}")
+
+        serializer = ProductValidateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Get validated data
+        title = serializer.validated_data.get('title')
+        description = serializer.validated_data.get('description')
+        price = serializer.validated_data.get('price')
+        category = serializer.validated_data.get('category')
+
+        # Create product
+        product = Product.objects.create(
+            title=title,
+            description=description,
+            price=price,
+            category=category,
+            owner=request.user,
+        )
+
+        return Response(data=ProductSerializer(product).data,
+                        status=status.HTTP_201_CREATED)
+    
+    def get(self, request, *args, **kwargs):
+        cached_data = cache.get("product_list")
+        if cached_data:
+            print("Redis")
+            return Response(data=cached_data, status=status.HTTP_200_OK)
+        response = super().get(self, request, *args, **kwargs)
+        print("Postgres")
+        if response.data.get("total", 0) > 0:
+            cache.set("product_list", response.data, timeout=300)
+        return response
+
+
+class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.select_related('category').all()
+    serializer_class = ProductSerializer
     lookup_field = 'id'
-    
-    def perform_update(self, serializer):
-        product_id = serializer.validated_data.pop('product', None)
-        if product_id is not None:
-            serializer.save(product_id=product_id)
-        else:
-            serializer.save()
+    permission_classes = [(IsOwner & IsAnonymous) | CanEditWithIn15minutes]
 
-@api_view(['GET'])
-def product_list_api_view(request):
-    products = Product.objects.all()
-    data = ProductListSerializer(products, many=True).data
-    return Response(data=data, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-def product_detail_api_view(request, id):
-    try:
-        product = Product.objects.get(id=id)
-    except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'Product not found!'})
-    
-    data = ProductDetailSerializer(product, many=False).data
-    return Response(data=data)
-
-@api_view(['GET'])
-def product_reviews_api_view(request):
-    products = Product.objects.all()
-    data = ProductWithReviewsSerializer(products, many=True).data
-    return Response(data=data, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-def categories_with_count_api_view(request):
-    categories = Category.objects.all()
-    data = CategoryWithProductCountSerializer(categories, many=True).data
-    return Response(data=data, status=status.HTTP_200_OK)
-
-
-@api_view(['POST', 'PUT', 'DELETE'])
-def category_cud_api_view(request, id=None):
-    if request.method == 'POST':
-        serializer = CategoryValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            name = serializer.validated_data.get('name')
-            category = Category.objects.create(name=name)
-            return Response(data={'id': category.id, 'name': category.name}, status=status.HTTP_201_CREATED)
-
-    try:
-        category = Category.objects.get(id=id)
-    except Category.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'Category not found!'})
-
-    if request.method == 'PUT':
-        serializer = CategoryValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            category.name = serializer.validated_data.get('name')
-            category.save()
-            return Response(data={'id': category.id, 'name': category.name}, status=status.HTTP_200_OK)
-
-    if request.method == 'DELETE':
-        category.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-@api_view(['POST', 'PUT', 'DELETE'])
-def product_cud_api_view(request, id=None):
-    if request.method == 'POST':
+    def put(self, request, *args, **kwargs):
+        product = self.get_object()
         serializer = ProductValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            title = serializer.validated_data.get('title')
-            description = serializer.validated_data.get('description')
-            price = serializer.validated_data.get('price')
-            category_id = serializer.validated_data.get('category')
-            
-            product = Product.objects.create(
-                title=title,
-                description=description,
-                price=price,
-                category_id=category_id
-            )
-            return Response(data={'id': product.id, 'title': product.title}, status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
 
-    try:
-        product = Product.objects.get(id=id)
-    except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'Product not found!'})
+        product.title = serializer.validated_data.get('title')
+        product.description = serializer.validated_data.get('description')
+        product.price = serializer.validated_data.get('price')
+        product.category = serializer.validated_data.get('category')
+        product.save()
 
-    if request.method == 'PUT':
-        serializer = ProductValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            product.title = serializer.validated_data.get('title')
-            product.description = serializer.validated_data.get('description')
-            product.price = serializer.validated_data.get('price')
-            product.category_id = serializer.validated_data.get('category')
-            product.save()
-            return Response(data={'id': product.id, 'title': product.title}, status=status.HTTP_200_OK)
+        return Response(data=ProductSerializer(product).data)
 
-    if request.method == 'DELETE':
-        product.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['POST', 'PUT', 'DELETE'])
-def review_cud_api_view(request, id=None):
-    if request.method == 'POST':
+class ReviewViewSet(ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    pagination_class = CustomPagination
+    lookup_field = 'id'
+
+    def create(self, request, *args, **kwargs):
         serializer = ReviewValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            text = serializer.validated_data.get('text')
-            stars = serializer.validated_data.get('stars')
-            product_id = serializer.validated_data.get('product')
+        serializer.is_valid(raise_exception=True)
 
-            review = Review.objects.create(
-                text=text,
-                stars=stars,
-                product_id=product_id
-            )
-            return Response(data={'id': review.id, 'text': review.text}, status=status.HTTP_201_CREATED)
+        # Get validated data
+        text = serializer.validated_data.get('text')
+        stars = serializer.validated_data.get('stars')
+        product = serializer.validated_data.get('product')
 
-    try:
-        review = Review.objects.get(id=id)
-    except Review.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND, data={'error': 'Review not found!'})
+        # Create review
+        review = Review.objects.create(
+            text=text,
+            stars=stars,
+            product=product
+        )
 
-    if request.method == 'PUT':
+        return Response(data=ReviewSerializer(review).data,
+                        status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        review = self.get_object()
         serializer = ReviewValidateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            review.text = serializer.validated_data.get('text')
-            review.stars = serializer.validated_data.get('stars')
-            review.product_id = serializer.validated_data.get('product')
-            review.save()
-            return Response(data={'id': review.id, 'text': review.text}, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
 
-    if request.method == 'DELETE':
-        review.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        review.text = serializer.validated_data.get('text')
+        review.stars = serializer.validated_data.get('stars')
+        review.product = serializer.validated_data.get('product')
+        review.save()
+
+        return Response(data=ReviewSerializer(review).data)
+
+
+class ProductWithReviewsAPIView(APIView):
+    def get(self, request):
+        paginator = CustomPagination()
+        products = Product.objects.select_related('category').prefetch_related('reviews').all()
+        result_page = paginator.paginate_queryset(products, request)
+
+        serializer = ProductWithReviewsSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)

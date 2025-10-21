@@ -1,83 +1,70 @@
 from rest_framework import serializers
+from .models import Category, Product, Review
 from rest_framework.exceptions import ValidationError
-from django.db.models import Avg, Count
-from .models import Product, Category, Review, STARS
+
+class CategorySerializer(serializers.ModelSerializer):
+    products_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'products_count']
+
+    def get_products_count(self, category):
+            return Product.objects.filter(category=category).count()
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ('id', 'text', 'stars')
+        fields = '__all__'
 
 
-class ProductDetailSerializer(serializers.ModelSerializer):
-    reviews = ReviewSerializer(many=True, read_only=True)
-    category = serializers.StringRelatedField(read_only=True) 
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'price', 'category', 'reviews')
+        fields = '__all__'
 
 
-class ProductListSerializer(serializers.ModelSerializer):
-    category = serializers.StringRelatedField(read_only=True) 
-
-    class Meta:
-        model = Product
-        fields = ('id', 'title', 'description', 'price', 'category')
-        
-        
 class ProductWithReviewsSerializer(serializers.ModelSerializer):
-    reviews = ReviewSerializer(many=True, read_only=True)
+    # reviews = ReviewSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Product
-        fields = ('id', 'title', 'description', 'price', 'reviews', 'rating')
+        fields = ['id', 'title', 'description', 'price', 'category', 'reviews', 'rating']
+        depth = 1
 
-    def get_rating(self, product):
-        return product.reviews.aggregate(avg_stars=Avg('stars')).get('avg_stars') or 0
+    def get_rating(self, obj):
+        reviews = obj.reviews.all()
+        if reviews.exists():
+            return round(sum([r.stars for r in reviews]) / reviews.count(), 2)
+        return None
 
 
-
-class CategoryWithProductCountSerializer(serializers.ModelSerializer):
-    products_count = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Category
-        fields = ('id', 'name', 'products_count')
-
-    def get_products_count(self, category):
-        return category.products.count()
-    
- 
 class CategoryValidateSerializer(serializers.Serializer):
-    name = serializers.CharField(required=True, min_length=1, max_length=100)
+    name = serializers.CharField(required=True, min_length=2, max_length=100)
 
-    def validate_name(self, value):
-        if not value.strip():
-            raise ValidationError("Имя категории не может быть пустым.")
-        if Category.objects.filter(name=value).exists():
-            raise ValidationError("Категория с таким именем уже существует.")
-        return value
 
 class ProductValidateSerializer(serializers.Serializer):
-    title = serializers.CharField(required=True, min_length=1, max_length=200)
-    description = serializers.CharField(required=False)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=0.01)
-    category = serializers.IntegerField(required=True) 
+    title = serializers.CharField(required=True, min_length=2, max_length=255)
+    description = serializers.CharField(required=False, allow_blank=True)
+    price = serializers.FloatField(min_value=0.01)
+    category = serializers.IntegerField(min_value=1)
 
     def validate_category(self, category_id):
         try:
-            Category.objects.get(id=category_id)
+            return Category.objects.get(id=category_id)
         except Category.DoesNotExist:
-            raise ValidationError("Указанная категория не существует.")
-        return category_id
+            raise ValidationError('Category does not exist')
+
 
 class ReviewValidateSerializer(serializers.Serializer):
     text = serializers.CharField(required=True, min_length=1)
-    stars = serializers.IntegerField(required=True, min_value=1, max_value=5)
+    stars = serializers.IntegerField(min_value=1, max_value=5)
+    product = serializers.IntegerField(min_value=1)
+
     def validate_product(self, product_id):
         try:
-            Product.objects.get(id=product_id)
+            return Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            raise ValidationError("Указанный товар не существует.")
-        return product_id
+            raise ValidationError('Product does not exist')
