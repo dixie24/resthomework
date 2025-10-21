@@ -18,7 +18,11 @@ import random
 import string
 from users.models import CustomUser
 
-class AutorizationAPIView(APIView):
+
+
+class AutorizationAPIView(CreateAPIView):
+    serializer_class = AuthValidateSerializer
+    
     def post(self, request):
         serializer = AuthValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -70,7 +74,9 @@ class RegistrationAPIView(CreateAPIView):
             data={"user_id": user.id, "confirmation_code": code}
         )
             
-class ConfirmationAPIView(APIView):
+class ConfirmationAPIView(CreateAPIView):
+    serializer_class = ConfirmationSerializer
+    
     def post(self, request):
         serializer = ConfirmationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
