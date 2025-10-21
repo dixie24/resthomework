@@ -20,3 +20,14 @@ class CanEditWithIn15minutes(BasePermission):
         time_passed = timezone.now() - obj.created_at
         print("time", time_passed)
         return time_passed <= timedelta(minutes=30)
+    
+
+class IsModerator(BasePermission):
+    def has_permission(self, request, view):
+
+        if request.method == 'POST':
+            return False
+        return bool(request.user and request.user.is_staff)
+
+    def has_object_permission(self, request, view, obj):
+        return True

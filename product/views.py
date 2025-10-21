@@ -17,8 +17,9 @@ from .serializer import (
     ProductValidateSerializer,
     ReviewValidateSerializer
 )
-from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes
+from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes, IsModerator
 from django.core.cache import cache
+from rest_framework.permissions import IsAuthenticated
 
 PAGE_SIZE = 5
 
@@ -70,22 +71,18 @@ class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsOwner | IsAnonymous]
+    permission_classes = [IsOwner | IsAnonymous, IsAuthenticated, IsModerator]
 
     def post(self, request, *args, **kwargs):
         email = request.user.email
         print(f"email: {email}")
-
         serializer = ProductValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Get validated data
         title = serializer.validated_data.get('title')
         description = serializer.validated_data.get('description')
         price = serializer.validated_data.get('price')
         category = serializer.validated_data.get('category')
 
-        # Create product
         product = Product.objects.create(
             title=title,
             description=description,
@@ -113,7 +110,7 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     lookup_field = 'id'
-    permission_classes = [(IsOwner & IsAnonymous) | CanEditWithIn15minutes]
+    permission_classes = [(IsOwner & IsAnonymous) | CanEditWithIn15minutes, IsAuthenticated, IsModerator]
 
     def put(self, request, *args, **kwargs):
         product = self.get_object()
