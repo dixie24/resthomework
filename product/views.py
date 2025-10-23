@@ -17,7 +17,7 @@ from .serializer import (
     ProductValidateSerializer,
     ReviewValidateSerializer
 )
-from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes, IsModerator
+from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes, IsModerator, CustomProductEditPermission
 from django.core.cache import cache
 from rest_framework.permissions import IsAuthenticated
 
@@ -63,7 +63,6 @@ class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
 
         instance.name = serializer.validated_data.get('name')
         instance.save()
-
         return Response(data=CategorySerializer(instance).data)
 
 
@@ -71,7 +70,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsOwner | IsAnonymous, IsAuthenticated, IsModerator]
+    permission_classes = [IsAuthenticated, IsModerator] 
 
     def post(self, request, *args, **kwargs):
         email = request.user.email
@@ -110,7 +109,7 @@ class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     lookup_field = 'id'
-    permission_classes = [(IsOwner & IsAnonymous) | CanEditWithIn15minutes, IsAuthenticated, IsModerator]
+    permission_classes = [IsAuthenticated, CustomProductEditPermission]
 
     def put(self, request, *args, **kwargs):
         product = self.get_object()
@@ -136,12 +135,11 @@ class ReviewViewSet(ModelViewSet):
         serializer = ReviewValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Get validated data
+
         text = serializer.validated_data.get('text')
         stars = serializer.validated_data.get('stars')
         product = serializer.validated_data.get('product')
 
-        # Create review
         review = Review.objects.create(
             text=text,
             stars=stars,
@@ -169,6 +167,6 @@ class ProductWithReviewsAPIView(APIView):
         paginator = CustomPagination()
         products = Product.objects.select_related('category').prefetch_related('reviews').all()
         result_page = paginator.paginate_queryset(products, request)
-
+        
         serializer = ProductWithReviewsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)

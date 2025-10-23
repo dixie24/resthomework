@@ -6,7 +6,7 @@ from datetime import timedelta
 class IsOwner(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated
-    
+
     def has_object_permission(self, request, view, obj):
         return request.user == obj.owner
     
@@ -31,3 +31,18 @@ class IsModerator(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return True
+
+
+class CustomProductEditPermission(BasePermission):
+    def has_permission(self, request, view):
+
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_staff:
+            return True
+        
+        if obj.owner == request.user:
+            time_passed = timezone.now() - obj.created_at
+            return time_passed <= timedelta(minutes=30)
+        return False
