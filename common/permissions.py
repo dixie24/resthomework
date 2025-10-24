@@ -22,17 +22,6 @@ class CanEditWithIn15minutes(BasePermission):
         return time_passed <= timedelta(minutes=30)
     
 
-class IsModerator(BasePermission):
-    def has_permission(self, request, view):
-
-        if request.method == 'POST':
-            return False
-        return bool(request.user and request.user.is_staff)
-
-    def has_object_permission(self, request, view, obj):
-        return True
-
-
 class CustomProductEditPermission(BasePermission):
     def has_permission(self, request, view):
 
@@ -46,3 +35,19 @@ class CustomProductEditPermission(BasePermission):
             time_passed = timezone.now() - obj.created_at
             return time_passed <= timedelta(minutes=30)
         return False
+    
+class IsModerator(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        
+        if request.method == 'POST' and request.user.is_staff:
+            return False
+        return True
+    
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_staff:
+            return True
+        
+        owner = getattr(obj, 'owner', None)
+        return owner == request.user 

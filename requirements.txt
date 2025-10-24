@@ -11,6 +11,7 @@ defusedxml==0.7.1
 Django==5.2.6
 django-dotenv==1.4.2
 djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
 dnspython==2.7.0
 dotenv==0.9.9
 drf-yasg==1.21.11
@@ -41,6 +42,7 @@ psycopg2==2.9.10
 pydantic==2.11.7
 pydantic_core==2.33.2
 Pygments==2.19.2
+PyJWT==2.10.1
 pypika-tortoise==0.6.1
 PySocks==1.7.1
 python-dotenv==1.1.1

@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'users',
     'rest_framework.authtoken',
     'drf_yasg',
-    
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 REST_FRAMEWORK = {
@@ -51,6 +52,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination', # <-- ДОБАВЛЕНО
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
 
@@ -135,7 +137,14 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization',
             'in': 'header',
             'description': 'Token adwadsdwawdweweweqweqweqweqweqweq47'
-        }
+        },
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Bearer adwad.sdwawdweweweqweqweqweqweqwe.q47'
+        },
+        
     }
 }
 
@@ -163,3 +172,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # В самом конце файла settings.py добавьте:
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+from datetime import timedelta
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+}

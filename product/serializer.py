@@ -48,7 +48,7 @@ class CategoryValidateSerializer(serializers.Serializer):
 class ProductValidateSerializer(serializers.Serializer):
     title = serializers.CharField(required=True, min_length=2, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)
-    price = serializers.FloatField(min_value=0.01)
+    price = serializers.DecimalField(min_value=0,max_digits=10, decimal_places=2, required=True, allow_null=False)
     category = serializers.IntegerField(min_value=1)
 
     def validate_category(self, category_id):
@@ -60,7 +60,7 @@ class ProductValidateSerializer(serializers.Serializer):
 
 class ReviewValidateSerializer(serializers.Serializer):
     text = serializers.CharField(required=True, min_length=1)
-    stars = serializers.IntegerField(min_value=1, max_value=5)
+    stars = serializers.IntegerField(max_value=5)
     product = serializers.IntegerField(min_value=1)
 
     def validate_product(self, product_id):

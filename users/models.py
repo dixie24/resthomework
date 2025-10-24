@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin 
+from django.contrib.auth.models import PermissionsMixin
 from users.managers import CustomUserManager 
 from django.conf import settings
 
@@ -17,7 +17,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
-    
+    birthdate = models.DateField(null=True, blank=True)
     objects = CustomUserManager()
     
     USERNAME_FIELD = 'email'
