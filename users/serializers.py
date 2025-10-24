@@ -3,6 +3,8 @@ from rest_framework.exceptions import ValidationError
 from .models import ConfirmationCode
 from users.models import CustomUser
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer 
+from django.core.cache import cache
+
 
 class UserBaseSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -22,28 +24,32 @@ class RegisterValidateSerializer(UserBaseSerializer):
             return email
         raise ValidationError('Email уже существует!')
 
-
 class ConfirmationSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     code = serializers.CharField(max_length=6)
 
     def validate(self, attrs):
         user_id = attrs.get('user_id')
-        code = attrs.get('code')
-
+        input_code = attrs.get('code')
+        
         try:
             user = CustomUser.objects.get(id=user_id)
         except CustomUser.DoesNotExist:
             raise ValidationError('User не существует!')
 
-        try:
-            confirmation_code = ConfirmationCode.objects.get(user=user)
-        except ConfirmationCode.DoesNotExist:
-            raise ValidationError('Код подтверждения не найден!')
-
-        if confirmation_code.code != code:
+        cache_key = f"confirmation_code_{user_id}"
+        stored_code = cache.get(cache_key)
+        
+        if stored_code is None:
+            raise ValidationError('Код подтверждения не найден или истёк!')
+        
+        if stored_code != input_code: 
             raise ValidationError('Неверный код подтверждения!')
 
+        cache.delete(cache_key)
+        user.is_active = True
+        user.save()
+        
         return attrs
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
