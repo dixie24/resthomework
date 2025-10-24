@@ -45,6 +45,7 @@ Pygments==2.19.2
 PyJWT==2.10.1
 pypika-tortoise==0.6.1
 PySocks==1.7.1
+python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 python-multipart==0.0.20
 pytz==2025.2
