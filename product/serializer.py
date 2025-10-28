@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Category, Product, Review
 from rest_framework.exceptions import ValidationError
-
+from common.validators import validate_adult_creator
 class CategorySerializer(serializers.ModelSerializer):
     products_count = serializers.SerializerMethodField()
 
@@ -68,3 +68,13 @@ class ReviewValidateSerializer(serializers.Serializer):
             return Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             raise ValidationError('Product does not exist')
+        
+        
+class ProductCreateSerializer(serializers.ModelSerializer):    
+    def validate(self, data):
+        claims = self.context.get('claims')
+        
+        if claims:
+            validate_adult_creator(claims) 
+        
+        return super().validate(data)

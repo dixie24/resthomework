@@ -19,7 +19,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=15, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
-    birthdate = models.DateField(null=True, blank=True)
+    birthdate = models.DateField(null=True, blank=True, verbose_name='Date of Birth')
     objects = CustomUserManager()
     date_joined = models.DateTimeField(default=timezone.now) 
     last_login = models.DateTimeField(null=True, blank=True)

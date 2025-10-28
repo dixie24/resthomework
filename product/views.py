@@ -6,6 +6,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
+from rest_framework import generics
 
 from .models import Category, Product, Review
 from .serializer import (
@@ -18,7 +19,7 @@ from .serializer import (
     ReviewValidateSerializer
 )
 from common.permissions import IsOwner, IsAnonymous, CanEditWithIn15minutes, IsModerator
-from common.validators import IsAdultProductCreator
+from common.validators import validate_adult_creator
 from django.core.cache import cache
 from rest_framework.permissions import IsAuthenticated
 
@@ -71,12 +72,17 @@ class ProductListCreateAPIView(ListCreateAPIView):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsOwner | IsAnonymous | IsAdultProductCreator]
+    permission_classes = [IsAuthenticated] 
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if self.request.user.is_authenticated and self.request.auth:
+            context['claims'] = self.request.auth.payload
+            
+        return context
 
     def post(self, request, *args, **kwargs):
-        email = request.user.email
-        print(f"email: {email}")
-        serializer = ProductValidateSerializer(data=request.data)
+        serializer = ProductValidateSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         title = serializer.validated_data.get('title')
         description = serializer.validated_data.get('description')
@@ -92,7 +98,7 @@ class ProductListCreateAPIView(ListCreateAPIView):
         )
 
         return Response(data=ProductSerializer(product).data,
-                        status=status.HTTP_201_CREATED)
+                         status=status.HTTP_201_CREATED)
     
     def get(self, request, *args, **kwargs):
         cached_data = cache.get("product_list")
@@ -171,3 +177,6 @@ class ProductWithReviewsAPIView(APIView):
         
         serializer = ProductWithReviewsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
+ 
+    
+

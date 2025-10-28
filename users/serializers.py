@@ -55,16 +55,17 @@ class ConfirmationSerializer(serializers.Serializer):
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        token = super().get_token(user)
-        token["email"] = user.email
-        
-        if user.data_birth:
-            token["birthdate"] = user.data_birth.isoformat()
-        else:
-            token["birthdate"] = None
-        
-        return token
+        token = super().get_token(user) 
+        token['email'] = user.email
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
 
+        if user.birthdate:
+            token['birthdate'] = user.birthdate.isoformat() 
+        else:
+            token['birthdate'] = None
+
+        return token
 
 class OauthCodeSerializer(serializers.Serializer):
     code = serializers.CharField()
