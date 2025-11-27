@@ -8,7 +8,10 @@ from users.serializers import OauthCodeSerializer
 from rest_framework import status
 from django.db import transaction
 from django.utils import timezone
-
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
+from users.managers import CustomUserManager 
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -91,3 +94,6 @@ class GoogleLoginAPIView(CreateAPIView):
                 {"access_token": str(refresh.access_token), "refresh_token": str(refresh)},
                 status=status.HTTP_200_OK
             )
+
+
+        return Response({"error": "Unknown error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
