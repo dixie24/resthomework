@@ -24,3 +24,13 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_staff=True.')
             
         return self.create_user(email, password, **extra_fields)
+    
+    def normalize_email(self, email):
+        email = email or ''
+        try:
+            email_name, domain_part = email.strip().rsplit('@', 1)
+        except ValueError:
+            pass
+        else:
+            email = email_name + '@' + domain_part.lower()
+        return email
