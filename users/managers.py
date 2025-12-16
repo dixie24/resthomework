@@ -25,6 +25,8 @@ class CustomUserManager(BaseUserManager):
             
         return self.create_user(email, password, **extra_fields)
     
+    
+    ## Normalize email by lowercasing the domain part of the email address.
     def normalize_email(self, email):
         email = email or ''
         try:

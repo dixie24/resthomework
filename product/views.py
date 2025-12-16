@@ -180,3 +180,11 @@ class ProductWithReviewsAPIView(APIView):
  
     
 
+
+class ClearProductCacheAPIView(APIView):    
+    def post(self, request):
+        cache.delete("product_list")
+        return Response(data={"detail": "Product cache cleared."}, status=status.HTTP_200_OK)
+    def post(self, request):
+        cache.delete("product_list")
+        return Response(data={"detail": "Product cache cleared."}, status=status.HTTP_200_OK)
